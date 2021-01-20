@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "608112432505",
+    "project_id": "flutter-ride-10fc2",
+    "storage_bucket": "flutter-ride-10fc2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:608112432505:android:dd8a05a604506cc3ab4ba8",
+        "android_client_info": {
+          "package_name": "com.flutter.rideapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "608112432505-m18akqkd2tvvn5pfs7d6gvpmsv6f2p31.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCF_YpSfyAu2i62Tyb5iDw7SbeHxlETPuw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "608112432505-m18akqkd2tvvn5pfs7d6gvpmsv6f2p31.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -25,9 +25,10 @@ class ProgressDialog extends StatelessWidget {
               SizedBox(width: 6.0,),
               Text(
                 message,
+                overflow: TextOverflow.ellipsis ,
                 style: TextStyle(
                   color: Colors.black,
-                  fontSize: 15.0,
+                  fontSize: 12.0,
                 ),
                 textAlign: TextAlign.center,
               )

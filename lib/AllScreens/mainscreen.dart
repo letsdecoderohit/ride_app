@@ -9,6 +9,7 @@ import 'package:ride_app/AllScreens/searchScreen.dart';
 import 'package:ride_app/Assistants/assistantMethods.dart';
 import 'package:ride_app/DataHandler/appData.dart';
 import 'package:ride_app/Widgets/divider.dart';
+import 'package:ride_app/Widgets/progressDialog.dart';
 
 class MainScreen extends StatefulWidget {
 
@@ -57,6 +58,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+
       key: scaffoldkey,
       appBar: AppBar(
         title: Text(
@@ -185,8 +187,13 @@ class _MainScreenState extends State<MainScreen> {
                       Text("where to? ", style: TextStyle(fontSize: 20.0, fontFamily: "Brand-Bold"), ),
                       SizedBox(height: 20.0,),
                       GestureDetector(
-                        onTap: (){
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => SearchScreen()));
+                        onTap: () async{
+                          var  res = await Navigator.push(context, MaterialPageRoute(builder: (context) => SearchScreen()));
+
+                          if(res == "obtain")
+                          {
+                            await getPlaceDirection();
+                          }
                         },
                         child: Container(
                           decoration: BoxDecoration(
@@ -270,5 +277,27 @@ class _MainScreenState extends State<MainScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> getPlaceDirection() async{
+    var initialPos = Provider.of<AppData>(context,listen: false).pickUpLocation;
+    var finalPos = Provider.of<AppData>(context,listen: false).dropOfLocation;
+
+    var pickUpLatLng = LatLng(initialPos.latitude, initialPos.longitude);
+    var dropOfLatLng = LatLng(finalPos.latitude, finalPos.longitude);
+
+    showDialog(
+        context: context,
+        builder: (BuildContext context) => ProgressDialog(message: "Please wait..",)
+    );
+
+    var details = await AssistantMethods.obtainPlaceDirectionDetails(pickUpLatLng, dropOfLatLng);
+
+
+
+    print("This is encoded points : : : : : : : ");
+    print(details.encodedPoints);
+
+    Navigator.pop(context);
   }
 }

@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ride_app/Assistants/requestAssistant.dart';
 import 'package:ride_app/DataHandler/appData.dart';
+import 'package:ride_app/Models/address.dart';
+import 'package:ride_app/Models/placePredictions.dart';
+import 'package:ride_app/Widgets/divider.dart';
+import 'package:ride_app/Widgets/progressDialog.dart';
 import 'package:ride_app/configMaps.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -14,6 +18,8 @@ class _SearchScreenState extends State<SearchScreen> {
   TextEditingController pickUptextEditingController = TextEditingController();
   TextEditingController dropOftextEditingController = TextEditingController();
 
+  List<PlacePredictions> placePredictionList = [];
+
   @override
   Widget build(BuildContext context) {
 
@@ -21,6 +27,7 @@ class _SearchScreenState extends State<SearchScreen> {
     pickUptextEditingController.text = placeAddress;
 
     return Scaffold(
+      resizeToAvoidBottomPadding: false,
       body: Column(
         children: [
           Container(
@@ -127,7 +134,29 @@ class _SearchScreenState extends State<SearchScreen> {
                 ],
               ),
             ),
+          ),
+
+          //tile for predictions
+          SizedBox(height: 10.0,),
+          (placePredictionList.length > 0 )
+              ? Padding(
+            padding: EdgeInsets.symmetric(vertical: 8.0,horizontal: 16.0),
+            child: ListView.separated(
+              padding: EdgeInsets.all(0.0),
+              itemBuilder: (context, index){
+                return PredictionTile(placePredictions: placePredictionList[index],);
+
+              },
+              separatorBuilder: (BuildContext context, int index) => DividerWidget(),
+              itemCount: placePredictionList.length,
+              shrinkWrap: true,
+              physics: ClampingScrollPhysics(),
+            ),
+
           )
+              : Container(),
+
+
         ],
       ),
     );
@@ -143,9 +172,95 @@ class _SearchScreenState extends State<SearchScreen> {
       if(res == "failed"){
         return;
       }
-      print("Places Predictions Response");
-      print(res);
+
+      if(res["status"] == "OK"){
+        var predictions = res["predictions"];
+
+        var placeList = (predictions as List).map((e) => PlacePredictions.fromJson(e)).toList();
+
+        setState(() {
+          placePredictionList = placeList;
+        });
+      }
     }
 
   }
+}
+
+
+class PredictionTile extends StatelessWidget {
+
+  final PlacePredictions placePredictions;
+
+  PredictionTile({Key key,this.placePredictions}): super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return FlatButton(
+      padding: EdgeInsets.all(0.0),
+      onPressed: () {
+        getPlaceAddressDetails(placePredictions.place_id, context);
+      },
+      child: Container(
+        child: Column(
+          children: [
+            SizedBox(width: 10.0,),
+            Row(
+              children: [
+                Icon(Icons.add_location),
+                SizedBox(width: 14.0,),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 8.0,),
+                      Text(placePredictions.main_text,overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 16.0,),),
+                      SizedBox(height: 2.0,),
+                      Text(placePredictions.secondary_text,overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12.0,color: Colors.grey),),
+                      SizedBox(height: 8.0,),
+                    ],
+                  ),
+                )
+              ],
+            ),
+            SizedBox(width: 10.0,),
+
+          ],
+        ),
+      ),
+    );
+  }
+
+  void getPlaceAddressDetails(String placeId, context) async {
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => ProgressDialog(message: "Setting Dropoff , Please wait..",)
+    );
+
+    String placeDetailsUrl = "https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=$mapkey";
+
+    var res = await RequestAssistant.getRequest(placeDetailsUrl);
+
+    Navigator.pop(context);
+
+    if(res == "failed"){
+     return;
+    }
+
+    if(res["status"] == "OK"){
+      Address address = Address();
+      address.placeName = res["result"]["name"];
+      address.placeId = placeId;
+      address.latitude = res["result"]["geometry"]["location"]["lat"];
+      address.longitude = res["result"]["geometry"]["location"]["lng"];
+
+      Provider.of<AppData>(context,listen: false).updateDropOfLocationAddress(address);
+      print("This is Drop Of Location");
+      print(address.placeName);
+
+      Navigator.pop(context, "obtain");
+    }
+  }
+
 }

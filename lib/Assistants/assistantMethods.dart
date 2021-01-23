@@ -63,4 +63,19 @@ class AssistantMethods{
     return directionDetails;
   }
 
+
+  static int calculateFares(DirectionDetails directionDetails){
+
+    double timeTraveledFare = (directionDetails.durationValue / 60) * 0.20;
+    double distanceTraveledFare = (directionDetails.distanceValue / 1000) * 0.20;
+
+    //In USD
+    double totalFareAmount = timeTraveledFare + distanceTraveledFare;
+
+    //In Ruppes
+    double totalLocalFareAmount = totalFareAmount * 71;
+
+    return totalLocalFareAmount.truncate();
+  }
+
 }

@@ -1,13 +1,18 @@
-import 'dart:ffi';
+import 'dart:convert';
+import 'dart:math';
 
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:ride_app/DataHandler/appData.dart';
 import 'package:ride_app/Models/address.dart';
+import 'package:ride_app/Models/allUsers.dart';
 import 'package:ride_app/Models/directionDetails.dart';
 import 'requestAssistant.dart';
 import 'package:ride_app/configMaps.dart';
+import 'package:http/http.dart' as http;
 
 class AssistantMethods{
   static Future<String> searchCoordinateAddress(Position position,context) async{
@@ -76,6 +81,63 @@ class AssistantMethods{
     double totalLocalFareAmount = totalFareAmount * 71;
 
     return totalLocalFareAmount.truncate();
+  }
+
+
+  static void getCurrentOnlineUsersInfo() async{
+     firebaseUser = await FirebaseAuth.instance.currentUser;
+     String userId = firebaseUser.uid;
+     DatabaseReference reference = FirebaseDatabase.instance.reference().child("users").child(userId);
+
+     reference.once().then((DataSnapshot dataSnapshot){
+       if(dataSnapshot.value != null){
+         userCurrentInfo = Users.fromSnapshot(dataSnapshot);
+       }
+     });
+  }
+
+  static double createRandomNumber(int num){
+    var random = Random();
+    int randomNumber = random.nextInt(num);
+    return randomNumber.toDouble();
+  }
+
+  static sendNotificationToDrivers(String token, context ,String ride_request_id) async
+  {
+
+    var destination = Provider.of<AppData>(context, listen: false).dropOfLocation;
+
+    Map<String,String> headersMap = {
+      'Content-Type': 'application/json',
+      'Authorization': serverToken,
+    };
+
+    Map  notificationMap = {
+      'body': 'DropOff Address, ${destination.placeName}',
+      'title': 'New Ride Request'
+    };
+
+
+    Map dataMap ={
+      'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+      'id': '1',
+      'status': 'done',
+      'ride_request_id': ride_request_id,
+    };
+
+    Map sendNotificationMap = {
+      "notification" : notificationMap,
+      "data" : dataMap,
+      "priority" : "high",
+      "to" : token
+
+    };
+    
+    var res = await http.post(
+      'https://fcm.googleapis.com/fcm/send',
+      headers: headersMap,
+      body: jsonEncode(sendNotificationMap),
+    );
   }
 
 }
